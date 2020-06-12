@@ -7,19 +7,19 @@
 </template>
 <script>
 export default {
-  props:{
-    text:{
-      type:[String,Number],
-      default:'demo'
-    }
+  props: {
+    text: {
+      type: [String, Number],
+      default: 'demo',
+    },
   },
-  data(){
-    return {}
+  data() {
+    return {};
   },
-  methods:{
-    
-  }
-}
+  methods: {
+
+  },
+};
 </script>
 <style scoped>
 

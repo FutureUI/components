@@ -1,17 +1,36 @@
 <template>
-  <div>
-    <ul ref="ul" :style="ulStyle">
+  <div ref="wrapper">
+    <ul ref="ul" :style="ulStyle" @transitionend="onTransitionEnd">
+      <li>0</li>
       <li>1</li>
       <li>2</li>
       <li>3</li>
       <li>4</li>
+      <li>5</li>
+      <li>6</li>
+      <li>7</li>
+      <li>8</li>
+      <li>9</li>
+      <li>10</li>
+      <li>11</li>
+      <li>12</li>
+      <li>13</li>
+      <li>14</li>
+      <li>15</li>
+      <li>16</li>
+      <li>17</li>
+      <li>18</li>
+      <li>19</li>
+      <li>20</li>
+      <li>21</li>
+      <li>22</li>
+      <li>23</li>
     </ul>
     <b></b>
   </div>
 </template>
 <script>
 
-const DEFAULT_DURATION = 200;
 
 const MOMENTUM_LIMIT_TIME = 300;
 const MOMENTUM_LIMIT_DISTANCE = 15;
@@ -23,55 +42,67 @@ function getElementTranslateY(element) {
 
   return Number(translateY);
 }
+
 function range(num, min, max) {
   return Math.min(Math.max(num, min), max);
-}
-function isOptionDisabled(option) {
-  return isObject(option) && option.disabled;
-}
-function isObject(val) {
-  return val !== null && typeof val === 'object';
 }
 
 
 export default {
-  data(){
+  data() {
     return {
-      offset:0,
-      itemHeight: 50,
-      count: 4,
-      duration: DEFAULT_DURATION,
-      options:[{},{},{},{}],
+      wrapperHeight: 0, // 容器高
+      itemHeight: 0, // 行高
+      count: 0, //  数量
+      baseOffset: 0, // 中心位置偏移量
+
+      offset: 0, // 实际偏移量
+
+      duration: 200, // 动画时长
       /**
        * 拖拽偏移量
        */
-      startX:0,
-      startY:0,
-      deltaX:0,
-      deltaY:0,
-      offsetX:0,
-      offsetY: 0
-    }
+      startX: 0,
+      startY: 0,
+      deltaX: 0,
+      deltaY: 0,
+      offsetX: 0,
+      offsetY: 0,
+      /**
+       * 是否在移动
+       */
+      moving: false,
+      startOffset: 0, // 滑动的开始位置
+      touchStartTime: 0, // 开始时间
+      /**
+       * 快速移动
+       */
+      swipeDuration: 1000,
+    };
   },
-  computed:{
-    baseOffset() {
-      return (this.itemHeight * (4 - 1)) / 2;
-    },
-    ulStyle () {
+  computed: {
+    ulStyle() {
       return {
         transform: `translate3d(0, ${this.offset + this.baseOffset}px, 0)`,
         transitionDuration: `${this.duration}ms`,
         transitionProperty: this.duration ? 'all' : 'none',
-        lineHeight: `${this.itemHeight}px`,
-      }
-    }
+      };
+    },
   },
-  mounted(){
+  mounted() {
+    // 初始化变量
+    this.wrapperHeight = Number(window.getComputedStyle(this.$refs.wrapper).height.replace('px', ''));
+    this.count = Number(this.$refs.ul.querySelectorAll('li').length);
+    this.itemHeight = Number(window.getComputedStyle(this.$refs.ul.childNodes[0]).height.replace('px', ''));
+    this.baseOffset = (this.wrapperHeight - this.itemHeight) / 2;
+    // 绑定事件
     this.bind();
+
+    // 初始化位置
     this.setIndex(0);
   },
-  methods:{
-    onTouchStart(e){
+  methods: {
+    onTouchStart(e) {
       this.startX = e.touches[0].clientX;
       this.startY = e.touches[0].clientY;
       this.deltaX = 0;
@@ -88,12 +119,11 @@ export default {
       }
 
       this.duration = 0;
-      this.transitionEndTrigger = null;
+      // this.transitionEndTrigger = null;
       this.touchStartTime = Date.now();
       this.momentumOffset = this.startOffset;
-
     },
-    onTouchMove(e){
+    onTouchMove(e) {
       const touch = e.touches[0];
       this.deltaX = touch.clientX - this.startX;
       this.deltaY = touch.clientY - this.startY;
@@ -102,25 +132,27 @@ export default {
 
       this.moving = true;
       // preventDefault(event, true);
-      
+      e.preventDefault();
+      e.stopPropagation();
+
       this.offset = range(
         this.startOffset + this.deltaY,
         -(this.count * this.itemHeight),
-        this.itemHeight
+        this.itemHeight,
       );
 
       const now = Date.now();
+      // console.log(now,this.touchStartTime,now-this.touchStartTime)
       if (now - this.touchStartTime > MOMENTUM_LIMIT_TIME) {
         this.touchStartTime = now;
         this.momentumOffset = this.offset;
       }
     },
-    onTouchEnd(e){
+    onTouchEnd() {
       const distance = this.offset - this.momentumOffset;
       const duration = Date.now() - this.touchStartTime;
-      const allowMomentum =
-        duration < MOMENTUM_LIMIT_TIME &&
-        Math.abs(distance) > MOMENTUM_LIMIT_DISTANCE;
+      const allowMomentum = duration < MOMENTUM_LIMIT_TIME
+        && Math.abs(distance) > MOMENTUM_LIMIT_DISTANCE;
 
       if (allowMomentum) {
         this.momentum(distance, duration);
@@ -128,7 +160,7 @@ export default {
       }
 
       const index = this.getIndexByOffset(this.offset);
-      this.duration = DEFAULT_DURATION;
+      this.duration = 200;
       this.setIndex(index, true);
 
       // compatible with desktop scenario
@@ -137,62 +169,37 @@ export default {
         this.moving = false;
       }, 0);
     },
+    onTransitionEnd() {
+      this.moving = false;
+      this.duration = 0;
+    },
     momentum(distance, duration) {
       const speed = Math.abs(distance / duration);
 
-      distance = this.offset + (speed / 0.003) * (distance < 0 ? -1 : 1);
+      const realDistance = this.offset + (speed / 0.003) * (distance < 0 ? -1 : 1);
 
-      const index = this.getIndexByOffset(distance);
+      const index = this.getIndexByOffset(realDistance);
 
       this.duration = +this.swipeDuration;
       this.setIndex(index, true);
     },
-     getIndexByOffset(offset) {
+    getIndexByOffset(offset) {
       return range(Math.round(-offset / this.itemHeight), 0, this.count - 1);
     },
-    setIndex(index, emitChange) {
-      index = this.adjustIndex(index) || 0;
-
-      const offset = -index * this.itemHeight;
-
-      // const trigger = () => {
-      //   if (index !== this.currentIndex) {
-      //     this.currentIndex = index;
-
-      //     if (emitChange) {
-      //       this.$emit('change', index);
-      //     }
-      //   }
-      // };
-
-      // // trigger the change event after transitionend when moving
-      // if (this.moving && offset !== this.offset) {
-      //   this.transitionEndTrigger = trigger;
-      // } else {
-      //   trigger();
-      // }
+    setIndex(index) {
+      const realIndex = range(index, 0, this.count);
+      const offset = -realIndex * this.itemHeight;
 
       this.offset = offset;
     },
-    adjustIndex(index) {
-      index = range(index, 0, this.count);
-
-      for (let i = index; i < this.count; i++) {
-        if (!isOptionDisabled(this.options[i])) return i;
-      }
-
-      for (let i = index - 1; i >= 0; i--) {
-        if (!isOptionDisabled(this.options[i])) return i;
-      }
+    bind() {
+      this.$el.addEventListener('touchstart', this.onTouchStart);
+      this.$el.addEventListener('touchmove', this.onTouchMove);
+      this.$el.addEventListener('touchend', this.onTouchEnd);
+      this.$el.addEventListener('touchcancel', this.onTouchEnd);
     },
-    bind(){
-      this.$el.addEventListener( 'touchstart', this.onTouchStart);
-      this.$el.addEventListener( 'touchmove',this.onTouchMove);
-      this.$el.addEventListener( 'touchend', this.onTouchEnd);
-      this.$el.addEventListener('touchcancel',this.onTouchEnd);
-    }
-  }
-}
+  },
+};
 </script>
 
 <style scoped>
@@ -201,25 +208,26 @@ li {
   list-style: none;
 }
 div {
-  position:relative;
-  height: 250px;
+  position: relative;
+  height: 300px;
   overflow: hidden;
-  border: 1px solid #ddd;
+  box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.3);
 }
 li {
-  height: 50px;
-  line-height: 50px;
+  height: 44px;
+  line-height: 44px;
+  font-size:14px;
   text-align: center;
 }
 b {
   display: block;
   position: absolute;
-  top:50%;
-  left:0;
-  right:0;
-  height: 50px;
-  border-top:1px solid #ddd;
-  border-bottom:1px solid #ddd;
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 44px;
+  border-top: 1px solid #ddd;
+  border-bottom: 1px solid #ddd;
   transform: translateY(-50%);
 }
 </style>

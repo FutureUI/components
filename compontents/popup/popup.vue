@@ -7,60 +7,59 @@
 </template>
 <script>
 export default {
-  props:{
-    value:{
-      type:Boolean,
-      default:false
+  props: {
+    value: {
+      type: Boolean,
+      default: false,
     },
-    
+
   },
-  data(){
+  data() {
     return {
-    }
+    };
   },
   computed: {
-    style(){
+    style() {
       const style = {
         zIndex: `${this.zIndex}`,
-        background:`${this.background}`,
-        animationDuration:`${this.duration}s`
-      }
+        background: `${this.background}`,
+        animationDuration: `${this.duration}s`,
+      };
       return style;
-    }
+    },
   },
-  watch:{
-    value(val){
-      if(Boolean(val)) {
-        this.open()
-      }
-      else this.close();
-    }
+  watch: {
+    value(val) {
+      if (val) {
+        this.open();
+      } else this.close();
+    },
   },
-  methods:{
-    open(){
+  methods: {
+    open() {
       document.body.classList.add('overflow-hidden');
-      this.$emit('input',true)
+      this.$emit('input', true);
     },
 
-    close(){
+    close() {
       document.body.classList.remove('overflow-hidden');
-      this.$emit('input',false)
+      this.$emit('input', false);
     },
 
-    clickMaskHandler(e){
-      if(this.autoClose){
+    clickMaskHandler(e) {
+      if (this.autoClose) {
         this.close();
       }
     },
-  }
-}
+  },
+};
 </script>
 <style  scoped>
 .popup {
   position: fixed;
   top:50%;
   left:50%;
-  
+
   overflow: auto;
   -webkit-overflow-scrolling: touch;
 }

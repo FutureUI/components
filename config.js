@@ -3,7 +3,9 @@
  * 组件
  */
 export default [
+  'tab',
   'mask',
   'popup',
-  'picker'
-]
+  'picker',
+  'infinite',
+];
